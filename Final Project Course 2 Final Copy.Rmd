@@ -1,0 +1,108 @@
+---
+title: "Final project"
+output: pdf_document
+------
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+```
+
+### Load data
+
+```{r load-data}
+load("/Users/ajitsingh/Downloads/_5db435f06000e694f6050a2d43fc7be3_gss.Rdata")
+```
+
+
+
+* * *
+
+## Part 1: Data
+This study can be generalized to people who are above 18, are not institutionalized, and are able to afford a phone. There was random sampling used, as people were called at random. However, the study only questioned those who are not in an institute, are above 18, and possess a phone, so some demographics of the population are not represented. This study cannot establish causality, as random assignment was not used. This is not an experiment, so random assignment cannot occur, and an observational study such as this one can only establish correlations, not causation. 
+
+* * *
+
+## Part 2: Research question
+
+The research question that I would like to focus on in this course is the relationship between the degree a person has and the age of the person. My alternative hypothesis is a person is more likely to have a higher degree if they are a lower age. The answer to this question can indicate if more people go to college now than they used to since the college degree is more of a requirement today than it used to be. This study can be generalized to people who are not institutionalized, can afford a phone, and are above 18. How correlated are higher degrees and age?
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+
+```{r}
+variable<-select(gss, degree, age)
+variable1<-na.omit(variable, na.action = "omit")
+variable2<-variable1[variable1$age>30,]
+ggplot(variable2, aes(x=degree, y = age))+geom_boxplot()+ggtitle('Degree vs Age')+ labs(y="The Age of the Person", x = "Education of the Person")
+```
+
+
+In the code above, variable is the variable under investigation in the project. It is the degre and age of a person selected out of the gss dataset, and is placed into variable. In variable1 I have omitted all the NA values since they are useless. I then exluded anyone below the age of 30, as anyone below that age has not had time to attain higher degrees. They contaminate the data. Then, variable2 is plotted to a boxplot. The boxplots show the ages of those who hold the degrees. The median for the Left High School boxplot is higher than all the other boxplots. This supports my alternative hypothesis that the older generation was, on average, less educated than the younger generation since the average age of less educated people is higher. The average age of more educated people is lower. However, no conclusion can be made until a hypothesis test is conducted. This can be generalized to people who are not institutionalized, are above 18, and can afford a phone.  
+```{r}
+summary(variable2)
+```
+This is the summary for the data from variable2 used for the plot. 
+* * *
+
+## Part 4: Inference
+
+For this project, the null hypothesis is that there is no difference between the education level and age of the different bins. This would occur if everyone was equally educated regardless of age. 
+The alternative hypothesis is that the older generation is less educated than the younger generation. This can be shown if the ages in the bins are different. 
+There are five bins in this hypothesis test, one for each type of degree. The type of test that must be conducted is an ANOVA test as it will find variance between these many groups. 
+The conditions placed on such a hypothesis test are met in the data. The data is independent, as the same person was not called many times. The data also represents less than 10% of the population, as more than 570610 people live in the United States. There are also more than 10 people(cases) in each of my bins. 
+
+```{r}
+tapply(variable2$age, variable2$degree, mean)
+variable2$mean.group<-with(variable2,tapply(variable2$age, variable2$degree,mean))[variable2$degree]
+variable2$mean.grand<-mean(variable2$age)
+variable2$te<-variable2$mean.group-variable2$mean.grand
+variable2$te.sqr<-variable2$te^2
+variable2$residuals<-variable2$age-variable2$mean.group
+variable2$resid.sqr<-(variable2$age-variable2$mean.group)^2
+variable2$dev.grand.sqr<-(variable2$age-variable2$mean.grand)^2
+```
+
+Above I have calculated all the main components of the ANOVA test. I will now use the data to compute the ANOVA test. 
+
+```{r}
+tss<-sum(variable2$te.sqr)
+sse<-sum(variable2$resid.sqr)
+TSS2<-sum(variable2$dev.grand.sqr)
+```
+
+Above are the calculations for sum of squares(tss), the error sum of squares(sse), and the total sum of squares(TSS2). 
+
+```{r}
+df1 = (5-1)
+df2 = (42541-5)
+df3 = (42541-1)
+```
+
+Here I have calculated the Sum of Squares degrees of freedom(df1), the Error Sum of Squares degrees of freedom(df2), and the Total Sum of Squares degrees of freedom(df3). 
+
+```{r}
+MS1<-tss/df1
+MS2<-sse/df2
+```
+
+Here I have calculated the Mean Square(MS1) and the Error Mean Square(MS2). 
+
+```{r}
+e4 <- MS1/MS2
+```
+
+Here I have calculated the F-statistic. 
+
+```{r}
+e5<-qf(0.95,df1,df2)
+1-pf(e5, df1, df2)
+```
+
+Since the p-value is 0.05, and is not below the 0.05 significance value, the null hypothesis is not rejected and the two variables under investigation, the age and education level, are not correlated. This result can be extrapolated to the entire United States Population. 
